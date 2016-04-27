@@ -3,7 +3,6 @@ package sm130075.vl130298.crypto;
 import java.io.IOException;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
-
 import sun.security.x509.X509CertInfo;
 
 
@@ -14,7 +13,7 @@ public class Signer {
 		X509CertInfo x509certInfo = new X509CertInfo();
 		
 		try {
-			x509certInfo.set(X509CertInfo.SERIAL_NUMBER, arg1);
+			
 			x509certInfo.set(X509CertInfo.KEY, key);
 			x509certInfo.get(X509CertInfo.KEY);
 		} catch (Exception e) {

@@ -15,7 +15,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateFactorySpi;
 
 public class AES {
 	private Key key;
@@ -45,6 +44,7 @@ public class AES {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
 	}
 
 	public String encrypt(String text) {
@@ -63,23 +63,6 @@ public class AES {
 
 		return null;
 	}
-	
-	public byte[] encrypt(byte[] text) {
-		try {
-			IvParameterSpec iv = new IvParameterSpec(ivString.getBytes("UTF-8"));
-
-			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-			cipher.init(Cipher.ENCRYPT_MODE, key, iv);
-
-			byte[] encrypted = cipher.doFinal(text);
-
-			return encrypted;
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-
-		return null;
-	}
 
 	public String decrypt(String text) {
 		try {
@@ -91,23 +74,6 @@ public class AES {
 			byte[] original = cipher.doFinal(DatatypeConverter.parseBase64Binary(text));
 
 			return new String(original);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-
-		return null;
-	}
-	
-	public byte[] decrypt(byte[] text) {
-		try {
-			IvParameterSpec iv = new IvParameterSpec(ivString.getBytes("UTF-8"));
-
-			Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-			cipher.init(Cipher.DECRYPT_MODE, key, iv);
-
-			byte[] original = cipher.doFinal(text);
-
-			return original;
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}

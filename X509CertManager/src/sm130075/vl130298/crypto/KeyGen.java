@@ -35,4 +35,8 @@ public class KeyGen {
 		return null;
 	}
 	
+	public static void main(String[] args){
+		KeyPair keyPair = KeyGen.generatePair(Algorithm.RSAWITHSHA1, 1024);
+		
+	}
 }
