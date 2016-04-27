@@ -10,7 +10,6 @@ import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
-
 import sun.security.x509.X509CertInfo;
 
 
@@ -22,6 +21,7 @@ public class Signer extends Certificate {
 	}
 
 	public static void main(String[] argv){
+<<<<<<< HEAD
 		KeyPair key = KeyGen.generatePair(Algorithm.RSA, 1024);
 		Signer cert = new Signer(Algorithm.RSAwithSHA1.toString());
 		cert.publicKey = key.getPublic();
@@ -52,6 +52,20 @@ public class Signer extends Certificate {
 	public void verify(PublicKey key) throws CertificateException, NoSuchAlgorithmException, InvalidKeyException,
 			NoSuchProviderException, SignatureException {
 		// TODO Auto-generated method stub
+=======
+		PublicKey key = KeyGen.generatePair(Algorithm.RSA, 1024).getPublic();
+		key.getEncoded();
+		X509CertInfo x509certInfo = new X509CertInfo();
+		
+		try {
+			
+			x509certInfo.set(X509CertInfo.KEY, key);
+			x509certInfo.get(X509CertInfo.KEY);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+>>>>>>> da42c6d49e7e8252fd69afafd93caffaffe52884
 		
 	}
 
