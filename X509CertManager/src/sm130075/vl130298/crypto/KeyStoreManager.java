@@ -8,6 +8,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
+import java.security.KeyStore.PasswordProtection;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.CertificateFactorySpi;
 
 public class KeyStoreManager {
 	String path;
@@ -80,16 +84,46 @@ public class KeyStoreManager {
 
 		return null;
 	}
+
+	public KeyPair getKeyPair(String alias, String password) {
+		try {
+			KeyStore keyStore = KeyStore.getInstance("pkcs12");
+			FileInputStream fStream = new FileInputStream(path);
+			keyStore.load(fStream, this.password.toCharArray());
+			PasswordProtection pwProt = new PasswordProtection(password.toCharArray());
+			KeyStore.PrivateKeyEntry key = (KeyStore.PrivateKeyEntry) keyStore.getEntry(alias, pwProt);
+			fStream.close();
+			KeyPair result = new KeyPair(key.getCertificate().getPublicKey(), key.getPrivateKey());
+			
+			return result;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
 	
-	public void storeKey(Key key, String alias) {
+	public void storeKey(Key key, String alias, java.security.cert.Certificate c, String password) {
 		try {
 			keyStore.load(null, null);
-			keyStore.setKeyEntry(alias, key.getEncoded(), null);
+			java.security.cert.Certificate[] cr = new java.security.cert.Certificate[1];
+			cr[0] = c;
+			keyStore.setKeyEntry(alias, key, password.toCharArray(), cr);
 			OutputStream writeStream = new FileOutputStream(path);
 			keyStore.store(writeStream, this.password.toCharArray());
 			writeStream.close();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public static void main(){
+		try {
+			CertificateFactory cf = CertificateFactory.getInstance("RSA");	
+		} catch (CertificateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 }

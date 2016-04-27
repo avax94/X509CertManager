@@ -23,6 +23,7 @@ import java.util.List;
 import sun.security.pkcs.PKCS9Attribute;
 import sun.security.pkcs10.*;
 import sun.security.util.DerValue;
+import sun.security.util.ObjectIdentifier;
 import sun.security.x509.*;
 import javax.security.cert.CertificateEncodingException;
 import javax.security.cert.CertificateException;
@@ -41,6 +42,7 @@ public class CSR {
 	
 	public CSR(PublicKey publicKey, PrivateKey privateKey, X500Name x500Name) {
 		try {
+			
 			this.privateKey = privateKey;
 			csr = new PKCS10(publicKey);
 			Signature sig = Signature.getInstance(Algorithm.RSAwithSHA1.toString());
