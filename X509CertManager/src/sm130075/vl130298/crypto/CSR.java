@@ -45,7 +45,7 @@ public class CSR {
 			
 			this.privateKey = privateKey;
 			csr = new PKCS10(publicKey);
-			Signature sig = Signature.getInstance(Algorithm.RSAwithSHA1.toString());
+			Signature sig = Signature.getInstance(Algorithm.RSAWITHSHA1.toString());
 			sig.initSign(privateKey);
 			csr.encodeAndSign(x500Name, sig);
 			encoded = csr.getEncoded();
@@ -72,11 +72,6 @@ public class CSR {
 			sig.initSign(privateKey);
 			csr.encodeAndSign(x500Name, sig);
 			encoded = csr.getEncoded();
-			
-			if(toEncrypt){
-				aesCrypter = new AES();
-				aesCrypter.encrypt(encoded);
-			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

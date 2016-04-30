@@ -1,0 +1,10 @@
+package sm130075.vl130298.crypto;
+
+import java.security.KeyStore;
+
+import javax.security.*;
+
+
+public class KeyPair implements KeyStore.Entry{
+	KeyStore kStore;
+}

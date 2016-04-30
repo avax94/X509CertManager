@@ -5,11 +5,29 @@
  */
 package sm130075.vl130298.crypto;
 
+import sun.security.util.DerValue;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.security.AlgorithmParameters;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Principal;
 import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateEncodingException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateExpiredException;
+import java.security.cert.CertificateNotYetValidException;
+import java.security.cert.X509Certificate;
 import java.util.Date;
+import java.util.Set;
+
 import sun.security.tools.keytool.CertAndKeyGen;
+import sun.security.util.DerEncoder;
+import sun.security.util.DerOutputStream;
 import sun.security.x509.AlgorithmId;
 import sun.security.x509.CertificateAlgorithmId;
 import sun.security.x509.CertificateIssuerName;
@@ -26,7 +44,7 @@ import sun.security.x509.X509CertInfo;
  *
  * @author Lazar
  */
-public class UnsignedCert {
+public class UnsignedCert extends X509Certificate {
 
     protected CertificateVersion version = new CertificateVersion();
     protected CertificateSerialNumber serialNum = null;
@@ -35,11 +53,9 @@ public class UnsignedCert {
     protected CertificateValidity interval = null;
     protected CertificateSubjectName subject = null;
     protected CertificateX509Key pubKey = null;
-    
+    PublicKey pKEy;
     private X509CertInfo x509certInfo = null;
-    private X509CertImpl x509;
     
-
     public UnsignedCert(BigInteger bigNum, X500Name issuer, Date date, Date date1, X500Name subject, PublicKey pk) {
         try {
             this.version = new CertificateVersion(CertificateVersion.V3);
@@ -49,7 +65,7 @@ public class UnsignedCert {
             this.interval = new CertificateValidity(date, date1);
             this.subject = new CertificateSubjectName(subject);
             this.pubKey = new CertificateX509Key(pk);
-            
+            pKEy = pk;
             this.x509certInfo = new X509CertInfo();
             x509certInfo.set(X509CertInfo.VERSION, version);
             x509certInfo.set(X509CertInfo.SERIAL_NUMBER, serialNum);
@@ -58,68 +74,10 @@ public class UnsignedCert {
             x509certInfo.set(X509CertInfo.SUBJECT, subject);
             x509certInfo.set(X509CertInfo.VALIDITY,interval );
             x509certInfo.set(X509CertInfo.KEY, pubKey);
-            
-            x509 = new X509CertImpl(x509certInfo);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-    }
-
-    public void setVersion(CertificateVersion version) {
-        this.version = version;
-    }
-
-    public CertificateSerialNumber getSerialNum() {
-        return serialNum;
-    }
-
-    public void setSerialNum(CertificateSerialNumber serialNum) {
-        this.serialNum = serialNum;
-    }
-
-    public CertificateAlgorithmId getAlgId() {
-        return algId;
-    }
-
-    public void setAlgId(CertificateAlgorithmId algId) {
-        this.algId = algId;
-    }
-
-    public CertificateIssuerName getIssuer() {
-        return issuer;
-    }
-
-    public void setIssuer(CertificateIssuerName issuer) {
-        this.issuer = issuer;
-    }
-
-    public CertificateValidity getInterval() {
-        return interval;
-    }
-
-    public void setInterval(CertificateValidity interval) {
-        this.interval = interval;
-    }
-
-    public CertificateSubjectName getSubject() {
-        return subject;
-    }
-
-    public void setSubject(CertificateSubjectName subject) {
-        this.subject = subject;
-    }
-
-    public CertificateX509Key getPubKey() {
-        return pubKey;
-    }
-
-    public void setPubKey(CertificateX509Key pubKey) {
-        this.pubKey = pubKey;
-    }
-
-    public X509CertImpl getCert(){
-        return x509;
     }
     public static void main(String[] argv){
         
@@ -132,12 +90,17 @@ public class UnsignedCert {
                           new X500Name("cn=test,o=gina"),
                           keyPair.getPublic());
         
-        uc.getCert().sign(keyPair.getPrivate(), Algorithm.RSAWITHSHA1.toString());
-        KeyStoreManager keyStore = new KeyStoreManager("laza.pk12", "zmajce");
-        keyStore.storeKey(keyPair.getPrivate(), "avax4", uc.getCert(), "zmaj");
-        KeyPair keyPair2 = keyStore.getKeyPair("avax4", "zmaj");
-        X509CertImpl x509certImpl = new X509CertImpl(keyStore.getCertificate("avax4", "").getEncoded());
-        System.out.println("whaaaat");
+        KeyStoreManager keyStore = new KeyStoreManager("milan.pk12", "zmajce");
+        keyStore.storeKey(keyPair.getPrivate(), "avax3", uc, "zmaj");
+        KeyPair keyPair2 = keyStore.getKeyPair("avax3", "zmaj");
+        if(compare(keyPair.getPrivate().getEncoded(), keyPair2.getPrivate().getEncoded()) && compare(keyPair.getPublic().getEncoded(), keyPair2.getPublic().getEncoded())){
+        	System.out.println("whaaaat");
+        }
+        else{
+        	System.out.println("nah man");
+        }
+        //X509CertImpl x509 = new X509CertImpl(new X509CertInfo(keyStore.getCertificate("avax7", "").getEncoded()));
+        
         
         } catch(Exception e){
             e.printStackTrace();
@@ -145,4 +108,189 @@ public class UnsignedCert {
        
         System.out.println("Nesto za kraj!");
     }
+    
+    public static boolean compare(byte[] a, byte[] b){
+    	if(a.length!=b.length){
+    		return false;
+    	}
+    	
+    	for(int i=0; i<a.length; i++){
+    		if(a[i]!=b[i])
+    			return false;
+    	}
+    	
+    	return true;
+    }
+
+	@Override
+	public Set<String> getCriticalExtensionOIDs() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public byte[] getExtensionValue(String arg0) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Set<String> getNonCriticalExtensionOIDs() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean hasUnsupportedCriticalExtension() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	@Override
+	public void checkValidity() throws CertificateExpiredException, CertificateNotYetValidException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void checkValidity(Date arg0) throws CertificateExpiredException, CertificateNotYetValidException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public int getBasicConstraints() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public Principal getIssuerDN() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean[] getIssuerUniqueID() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean[] getKeyUsage() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Date getNotAfter() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Date getNotBefore() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public BigInteger getSerialNumber() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getSigAlgName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public String getSigAlgOID() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public byte[] getSigAlgParams() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public byte[] getSignature() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Principal getSubjectDN() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public boolean[] getSubjectUniqueID() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public byte[] getTBSCertificate() throws CertificateEncodingException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public int getVersion() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public byte[] getEncoded() throws CertificateEncodingException {
+		
+		try {
+			DerOutputStream out = new DerOutputStream();
+			DerOutputStream derOStream = new DerOutputStream();
+			x509certInfo.encode(derOStream);
+			AlgorithmId algId = AlgorithmId.get(Algorithm.RSAWITHSHA1.toString());
+			byte[] rawCert = derOStream.toByteArray();
+			algId.encode(derOStream);
+			derOStream.putBitString(rawCert);
+			out.write(DerValue.tag_Sequence, derOStream);
+			return out.toByteArray();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} 
+		
+		return null;
+	}
+
+	@Override
+	public PublicKey getPublicKey() {
+		// TODO Auto-generated method stub
+		return pKEy;
+	}
+
+	@Override
+	public String toString() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void verify(PublicKey arg0) throws CertificateException, NoSuchAlgorithmException, InvalidKeyException,
+			NoSuchProviderException, SignatureException {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void verify(PublicKey arg0, String arg1) throws CertificateException, NoSuchAlgorithmException,
+			InvalidKeyException, NoSuchProviderException, SignatureException {
+		// TODO Auto-generated method stub
+		
+	}
 }
