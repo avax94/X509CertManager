@@ -1,0 +1,208 @@
+package sm130075.vl130298.crypto;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PKCS12Attribute;
+import java.security.Principal;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.cert.CertStore;
+import java.security.cert.Certificate;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import sun.security.pkcs10.*;
+import sun.security.util.DerOutputStream;
+import sun.security.util.DerValue;
+import sun.security.util.ObjectIdentifier;
+import sun.security.x509.*;
+
+import javax.security.cert.CertificateEncodingException;
+import javax.security.cert.CertificateException;
+import javax.security.cert.CertificateExpiredException;
+import javax.security.cert.CertificateNotYetValidException;
+import javax.security.cert.X509Certificate;
+import javax.xml.bind.DatatypeConverter;
+
+import sm130075.vl130298.exception.CertificateAlreadySignedException;
+import sm130075.vl130298.sun.PKCS9Attribute;
+
+public class CSR {
+	public static final String CERTIFICATE_VERSION_OID = "1.2.840.113549.1.9.9.1";
+	public static final String VALIDITY_OID = "1.2.840.113549.1.9.9.2";
+	private PKCS10 csr;
+	byte[] encoded;
+
+	public CSR(KeyStorage keyStorage) {
+		try {
+			Certificate cert = keyStorage.getCert();
+
+			if (!(cert instanceof UnsignedCert))
+				throw new CertificateAlreadySignedException();
+
+			UnsignedCert unsignedCert = (UnsignedCert) cert;
+
+			PrivateKey privateKey = keyStorage.getPrivateKey();
+			PublicKey publicKey = unsignedCert.getPublicKey();
+			X500Name x500Name = new X500Name(unsignedCert.getSubjectX500Principal().getName());
+
+			PKCS10Attribute[] att;
+			if (unsignedCert.certEx == null)
+				att = new PKCS10Attribute[4];
+			else
+				att = new PKCS10Attribute[5];
+
+			// Add Cert Version attribute
+			ObjectIdentifier oid = new ObjectIdentifier(CERTIFICATE_VERSION_OID);
+			att[0] = (new PKCS10Attribute(oid, unsignedCert.version));
+			//satt[0].derEncode(new DerOutputStream());
+
+			// Add serialNum attribute
+			att[1] = (new PKCS10Attribute(new ObjectIdentifier(PKCS9Attribute.SERIAL_OID.toString()), unsignedCert.serialNum));
+			att[1].derEncode(new DerOutputStream());
+			// Add AlgorithmId attribute
+			att[2] = (new PKCS10Attribute(new ObjectIdentifier(PKCS9Attribute.ALGORITHM_ID_STR.toString()), unsignedCert.algId));
+			att[2].derEncode(new DerOutputStream());
+			// Add Interval Validity attribute
+			ObjectIdentifier valoid = new ObjectIdentifier(VALIDITY_OID);
+			att[3] = (new PKCS10Attribute(valoid, unsignedCert.interval));
+			att[3].derEncode(new DerOutputStream());
+			// Add extensions attribute
+			if (unsignedCert.certEx != null)
+				att[4] = (new PKCS10Attribute(PKCS9Attribute.EXTENSION_REQUEST_OID, unsignedCert.certEx));
+			
+			PKCS10Attributes pkcs10atts = new PKCS10Attributes(att);
+			pkcs10atts.encode(new DerOutputStream());
+			csr = new PKCS10(publicKey, pkcs10atts);
+			Signature sig = Signature.getInstance(Algorithm.RSAWITHSHA1.toString());
+			sig.initSign(privateKey);
+			csr.encodeAndSign(x500Name, sig);
+			encoded = csr.getEncoded();
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public CSR(FileInputStream fStream) {
+		try {
+			int leftOvers = fStream.available();
+			byte[] cert = new byte[leftOvers];
+			csr = new PKCS10(cert);
+			encoded = csr.getEncoded();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public CSR(byte[] cert) {
+		try {
+			csr = new PKCS10(cert);
+			encoded = csr.getEncoded();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	public byte[] getEncoded() {
+		return encoded.clone();
+	}
+
+	public String print() {
+		return DatatypeConverter.printBase64Binary(encoded);
+	}
+
+	public X509CertInfo getCertInfo() {
+		try {
+			X509CertInfo result = new X509CertInfo();
+			PKCS10Attribute att;
+
+			// Get version
+			att = (PKCS10Attribute) csr.getAttributes().getAttribute(CERTIFICATE_VERSION_OID);
+			result.set(X509CertInfo.VERSION, att.getAttributeValue());
+
+			// Get serial
+			att = (PKCS10Attribute) csr.getAttributes().getAttribute(PKCS9Attribute.ISSUER_SERIALNUMBER_OID.toString());
+			result.set(X509CertInfo.SERIAL_NUMBER, att.getAttributeValue());
+
+			// Get alg id
+			att = (PKCS10Attribute) csr.getAttributes().getAttribute(AlgorithmId.sha1WithRSAEncryption_oid.toString());
+			result.set(X509CertInfo.ALGORITHM_ID, att.getAttributeValue());
+
+			// Get validity
+			result.set(X509CertInfo.VALIDITY, att.getAttributeValue());
+
+			// Set subject
+			result.set(X509CertInfo.SUBJECT, csr.getSubjectName());
+
+			// Set public key
+			result.set(X509CertInfo.KEY, new CertificateX509Key(csr.getSubjectPublicKeyInfo()));
+			result.set(X509CertInfo.ISSUER, new X500Name("cn= , o= "));
+
+			// Set extensions
+			att = (PKCS10Attribute) csr.getAttributes().getAttribute(PKCS9Attribute.EXTENSION_REQUEST_OID.toString());
+
+			if (att != null)
+				result.set(X509CertInfo.EXTENSIONS, att.getAttributeValue());
+
+			return result;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public static boolean compare(byte[] first, byte[] second) {
+		if (first.length != second.length)
+			return false;
+
+		for (int i = 0; i < first.length; i++)
+			if (first[i] != second[i])
+				return false;
+
+		return true;
+	}
+
+	public static void main(String[] argv) {
+		KeyPair kPair = KeyGen.generatePair(Algorithm.RSA, 1024);
+		UnsignedCert uc = null;
+		try {
+			uc = new UnsignedCert(BigInteger.ONE, new Date(System.currentTimeMillis()),
+					new Date(2 * System.currentTimeMillis()), new X500Name("cn=test,o=gina"), kPair.getPublic(),
+					null, null, null);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		KeyStorage ks = new KeyStorage(kPair.getPrivate(), uc);
+		CSR csr = new CSR(ks);
+		CSR csr2 = new CSR(csr.getEncoded());
+
+		try {
+			if (CSR.compare(uc.x509certInfo.getEncodedInfo(), csr2.getCertInfo().getEncodedInfo())) {
+				System.out.println("GUGUTKO");
+			} else {
+				System.out.println("MUNEM");
+			}
+		} catch (java.security.cert.CertificateEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		X509CertInfo x509certInfo2 = csr2.getCertInfo();
+		X509CertInfo x509certInfo = csr.getCertInfo();
+		System.out.println(csr.print());
+
+	}
+}

@@ -3,6 +3,7 @@ package sm130075.vl130298.crypto;
 import java.security.*;
 import javax.crypto.KeyGenerator;
 
+
 public class KeyGen {
 	public static final String ALGORITHM = "AES";
 	

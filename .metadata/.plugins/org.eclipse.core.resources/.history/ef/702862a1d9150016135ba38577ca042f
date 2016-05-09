@@ -1,0 +1,29 @@
+package sm130075.vl130298.crypto;
+
+import java.security.PrivateKey;
+
+public class KeyStorage {
+	private PrivateKey privateKey;
+	private Certificate cert;
+	
+	public PrivateKey getPrivateKey() {
+		return privateKey;
+	}
+	
+	public void setPrivateKey(PrivateKey privateKey) {
+		this.privateKey = privateKey;
+	}
+	
+	public Certificate getUnsignedCert() {
+		return cert;
+	}
+	
+	public void setCert(Certificate cert) {
+		this.cert = cert;
+	}
+	
+	public KeyStorage(PrivateKey privateKey, Certificate cert) {
+		this.privateKey = privateKey;
+		this.unsignedCert = unsignedCert;
+	}
+}

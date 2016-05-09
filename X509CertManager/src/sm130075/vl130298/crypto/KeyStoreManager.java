@@ -3,7 +3,9 @@ package sm130075.vl130298.crypto;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -11,141 +13,115 @@ import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStore.PasswordProtection;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
 // PATH PASSWORD AND KEYSTORE --/> 
 // SIZE OD KEY VERZIJA PERIOD VAZENJA(DATE TIP) SERIJSKI BROJ , INFO O KORISNIKU , KORISCENJE KLJUCA
 // 
 
+import javax.crypto.CipherInputStream;
+import javax.crypto.CipherOutputStream;
+
+import sun.security.x509.BasicConstraintsExtension;
+import sun.security.x509.X500Name;
+
+import java.util.Date;
+
 public class KeyStoreManager {
 
-    String path;
-    String password;
-    KeyStore keyStore;
+	private String path;
+	private String password;
+	private KeyStore keyStore;
+	private AES aes;
 
-    public Certificate getCertificate(String alias, String password){
-        try {
-            KeyStore keyStore = KeyStore.getInstance("pkcs12");
-            FileInputStream fStream = new FileInputStream(path);
-            keyStore.load(fStream, this.password.toCharArray());
+	public KeyStoreManager(String path, String password)
+			throws NoSuchAlgorithmException, CertificateException, IOException, KeyStoreException {
+		this.path = path;
+		this.password = password;
 
-            if (!keyStore.containsAlias(alias)) {
-                return null;
-            }
+		// Create file if it doesnt exist
+		keyStore = KeyStore.getInstance("pkcs12");
+		Path p = Paths.get(path);
+		aes = new AES();
+		// check and then create
+		if (!Files.exists(p)) {
+			// this is creation
+			keyStore.load(null, null);
+			keyStore.store(new FileOutputStream(path), password.toCharArray());
+		}
 
-            Certificate cert = keyStore.getCertificateChain(alias)[0];
-            fStream.close();
+	}
 
-            return cert;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+	public Certificate getCertificate(String alias, String password)
+			throws NoSuchAlgorithmException, CertificateException, IOException, KeyStoreException {
 
-        return null;
-    }
-    
-    public KeyStoreManager(String path, String password) {
-        try {
-            this.path = path;
-            this.password = password;
-            keyStore = KeyStore.getInstance("pkcs12");
-            Path p = Paths.get(path);
+		KeyStore keyStore = KeyStore.getInstance("pkcs12");
+		FileInputStream fStream = new FileInputStream(path);
+		keyStore.load(fStream, this.password.toCharArray());
+		Certificate cert = keyStore.getCertificateChain(alias)[0];
+		fStream.close();
 
-            if (!Files.exists(p)) {
-                keyStore.load(null, null);
-                keyStore.store(new FileOutputStream(path), password.toCharArray());
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+		return cert;
 
-    public void storeKey(Key key, String alias, String password) {
-        try {
-            keyStore.load(null, null);
-            keyStore.setKeyEntry(alias, key, password.toCharArray(), null);
-            OutputStream writeStream = new FileOutputStream(path);
-            keyStore.store(writeStream, this.password.toCharArray());
-            writeStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+	}
 
-    public Key getKey(String alias, String password) {
-        try {
-            KeyStore keyStore = KeyStore.getInstance("pkcs12");
-            FileInputStream fStream = new FileInputStream(path);
-            keyStore.load(fStream, this.password.toCharArray());
+	public KeyStorage getKeyStorage(String alias, String password) throws NoSuchAlgorithmException,
+			CertificateException, IOException, KeyStoreException, UnrecoverableEntryException {
+		// Instantiate storage
+		KeyStore keyStore = KeyStore.getInstance("pkcs12");
+		keyStore.load(aes.decryptFile(path, true), this.password.toCharArray());
 
-            if (!keyStore.containsAlias(alias)) {
-                return null;
-            }
+		// Set protection parameters
+		PasswordProtection pwProt = new KeyStore.PasswordProtection(password.toCharArray());
 
-            Key key = keyStore.getKey(alias, password.toCharArray());
-            fStream.close();
+		KeyStore.PrivateKeyEntry key = (KeyStore.PrivateKeyEntry) keyStore.getEntry(alias, pwProt);
+	
+		return new KeyStorage(key.getPrivateKey(), new UnsignedCert(key.getCertificate().getEncoded()));
+	}
 
-            return key;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+	public void storeKey(String alias, KeyStorage keyStorage, String password)
+			throws NoSuchAlgorithmException, CertificateException, IOException, KeyStoreException {
+		PrivateKey key = keyStorage.getPrivateKey();
+		Certificate cert = keyStorage.getCert();
 
-        return null;
-    }
+		keyStore.load(null, null);
 
-    public Key getKey(String alias) {
-        try {
-            KeyStore keyStore = KeyStore.getInstance("pkcs12");
-            FileInputStream fStream = new FileInputStream(path);
-            keyStore.load(fStream, this.password.toCharArray());
-            Key key = keyStore.getKey(alias, null);
-            fStream.close();
+		// Create certificate chain - only one UNSIGNED certificate
+		Certificate[] array = new Certificate[1];
+		array[0] = cert;
 
-            return key;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+		keyStore.setKeyEntry(alias, key, password.toCharArray(), array);
+		FileOutputStream writeStream = new FileOutputStream(path);
+		aes.decryptFile(path, true);
+		keyStore.store(writeStream, this.password.toCharArray());
+		writeStream.close();
+		aes.encryptFile(path);
+	}
 
-        return null;
-    }
-    
-    public KeyPair getKeyPair(String alias, String password){
-         try {
-            KeyStore keyStore = KeyStore.getInstance("pkcs12");
-            FileInputStream fStream = new FileInputStream(path);
-            keyStore.load(fStream, this.password.toCharArray());
+	public static void main(String[] argv) {
+		try {
+			KeyPair kPair = KeyGen.generatePair(Algorithm.RSA, 1024);
+			UnsignedCert uc = new UnsignedCert(BigInteger.ONE, new Date(System.currentTimeMillis()),
+					new Date(2 * System.currentTimeMillis()), new X500Name("cn=test,o=gina"), kPair.getPublic(), new BasicConstraintsExtension(true, 1),
+					null, null);
 
-            if (!keyStore.containsAlias(alias)) {
-                return null;
-            }
-            PasswordProtection pwProt = new KeyStore.PasswordProtection(password.toCharArray());
-            KeyStore.PrivateKeyEntry key = (KeyStore.PrivateKeyEntry)keyStore.getEntry(alias, pwProt);
-            KeyPair keypair = new KeyPair(key.getCertificate().getPublicKey(), key.getPrivateKey());
-            
-            fStream.close();
-            return keypair;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+			KeyStorage ks = new KeyStorage(kPair.getPrivate(), uc);
 
-        return null;
-    }
-    //public key u null treba da uglavim!
+			KeyStoreManager ksmngr = new KeyStoreManager("Nsdath12117.p12", "");
+			ksmngr.storeKey("avaxebre", ks, "avax");
+			KeyStorage kstorage = ksmngr.getKeyStorage("avaxebre", "avax");
 
-    public void storeKey(Key key, String alias, Certificate cert, String password) {
-        try {
-            keyStore.load(null, null);
-            /*niz*/
-
-            Certificate[] array = new Certificate[1];
-            array[0] = cert;
-            keyStore.setKeyEntry(alias, key,password.toCharArray(), array);
-            OutputStream writeStream = new FileOutputStream(path);
-            keyStore.store(writeStream, this.password.toCharArray());
-            writeStream.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

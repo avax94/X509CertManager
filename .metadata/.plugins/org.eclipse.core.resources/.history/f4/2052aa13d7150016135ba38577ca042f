@@ -1,0 +1,122 @@
+package sm130075.vl130298.crypto;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.util.HashMap;
+
+import sm130075.vl130298.exception.NoSuchAliasException;
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
+import sun.security.x509.X509CertImpl;
+
+public class Cache {
+	private static final String CSRPREFIX = "----CSR BEGIN-----";
+	private static final String CSRSUFIX =  "----=CSR END------"
+	
+	
+	// Storage for imported and created CSRs
+	public static HashMap<String, CSR> csr = new HashMap<>();
+
+	// Storage for imported and created KeyPairs
+	public static HashMap<String, KeyStorage> keys = new HashMap<>();
+
+	// Storage for imported and created Certificates
+	public static HashMap<String, Certificate> certs = new HashMap<>();
+
+	public static void importKeyPair(String path, String alias, String password, String filePassword)
+			throws NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException,
+			UnrecoverableEntryException {
+		if (keys.containsKey(alias)) {
+			return;
+		}
+
+		KeyStoreManager keyStore = new KeyStoreManager(path, filePassword);
+		KeyStorage keyPair = keyStore.getKeyStorage(alias, password);
+		keys.put(alias, keyPair);
+	}
+
+	public static void importCSR(String path, String alias) throws IOException {
+		Path _path = Paths.get(path);
+		byte[] bytes = Files.readAllBytes(_path);
+		importCSR(alias, bytes);
+	}
+
+	public static void importCSR(String alias, byte[] encoded) {
+		if (!csr.containsKey(alias)) {
+			csr.put(alias, new CSR(encoded));
+		}
+	}
+
+	public static void importCertificate(String path, String alias) throws IOException, CertificateException {
+		if (!certs.containsKey(alias)) {
+			Path _path = Paths.get(path);
+			byte[] bytes = Files.readAllBytes(_path);
+			String encoded64 = new String(bytes);
+			BASE64Decoder bs64 = new BASE64Decoder();
+			certs.put(alias, new X509CertImpl(bs64.decodeBuffer(encoded64)));
+		}
+	}
+
+	public static void exportKeyPair(String path, String alias, String password, String filePassword) throws NoSuchAlgorithmException, CertificateException, KeyStoreException, IOException, UnrecoverableEntryException, NoSuchAliasException{
+		if(!keys.containsKey(alias))
+			throw new NoSuchAliasException("Failed to export key! There is no such key!");
+		
+		KeyStoreManager keyStore = new KeyStoreManager(path, filePassword);
+		KeyStorage keyStorage = keyStore.getKeyStorage(alias, password);
+		keyStore.storeKey(alias, keyStorage, password);
+	}
+	
+	public static void exportCSR(String alias) throws NoSuchAliasException{
+		//Chech if exist
+		if(!csr.containsKey(alias))
+			throw new NoSuchAliasException("Failed to export CSR! There is no such key!");
+		
+		CSR c = csr.get(alias);
+		
+		//encode it
+		BASE64Encoder bs64 = new BASE64Encoder();
+		
+		
+	}
+	
+	public static void saveCSR(String alias, CSR _csr){
+		csr.put(alias, _csr);
+	}
+	
+	public static void saveCertificae(String alias, Certificate cert){
+		certs.put(alias, cert);
+	}
+	
+	public static void saveKeyPair(String alias, KeyStorage keyStorage){
+		keys.put(alias, keyStorage);
+	}
+	
+	public static KeyStorage getKeyStorage(String alias) throws NoSuchAliasException {
+		if (!keys.containsKey(alias))
+			throw new NoSuchAliasException("Invalid key pair alias");
+
+		return keys.get(alias);
+	}
+
+	public static Certificate getCertificate(String alias) throws NoSuchAliasException {
+		if (!certs.containsKey(alias))
+			throw new NoSuchAliasException("Invalid certificate alias");
+
+		return certs.get(alias);
+	}
+
+	public static CSR getCSR(String alias) throws NoSuchAliasException {
+		if (!csr.containsKey(alias))
+			throw new NoSuchAliasException("Invalid CSR alias");
+
+		return csr.get(alias);
+	}
+}

@@ -1,0 +1,10 @@
+package sm130075.vl130298.crypto;
+
+import sm130075.vl130298.exception.NoSuchAliasException;
+
+public class Util {
+	public static void generateSigningRequest(String alias) throws NoSuchAliasException{
+		KeyStorage keyStorage = Cache.getKeyStorage(alias);
+		
+	}
+}
