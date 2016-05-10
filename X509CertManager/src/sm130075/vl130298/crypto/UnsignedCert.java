@@ -116,11 +116,6 @@ public class UnsignedCert extends X509Certificate {
 		}
 	}
 
-	public PKCS10Attributes getCSRAttributes() {
-
-		return null;
-	}
-
 	// get unsignedCert from its encoded form
 	public UnsignedCert(byte[] encoded) throws IOException, CertificateException {
 		// Get DerValue from encoded data
@@ -143,6 +138,7 @@ public class UnsignedCert extends X509Certificate {
 		interval = (CertificateValidity) x509certInfo.get(X509CertInfo.VALIDITY);
 		subject = (X500Name) x509certInfo.get(X509CertInfo.SUBJECT);
 		pubKey = new CertificateX509Key(x509cert.getPublicKey());
+		//TODO
 		bse = (BasicConstraintsExtension) x509cert.getExtension(PKIXExtensions.BasicConstraints_Id);
 		issAltNames = (IssuerAlternativeNameExtension) x509cert.getExtension(PKIXExtensions.IssuerAlternativeName_Id);
 		keyUsageEx = (KeyUsageExtension) x509cert.getExtension(PKIXExtensions.KeyUsage_Id);
@@ -373,6 +369,6 @@ public class UnsignedCert extends X509Certificate {
 	@Override
 	public void verify(PublicKey arg0, String arg1) throws CertificateException, NoSuchAlgorithmException,
 			InvalidKeyException, NoSuchProviderException, SignatureException {
-		// TODO Auto-generated method stub
+		// nothing to verify since we havent signed anything
 	}
 }

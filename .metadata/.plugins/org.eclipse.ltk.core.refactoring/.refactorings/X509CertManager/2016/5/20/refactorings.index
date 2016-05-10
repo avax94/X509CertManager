@@ -5,3 +5,8 @@
 1462810396368	Rename type 'PKCS9Attribute'
 1462816498739	Move compilation unit
 1462816534500	Rename type 'pkcs9'
+1462826977924	Delete element
+1462826982448	Delete element
+1462826984530	Delete element
+1462842811898	Encapsulate field 'filePath'
+1462843958822	Delete elements

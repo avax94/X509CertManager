@@ -7,6 +7,9 @@ public class KeyStorage {
 	private PrivateKey privateKey;
 	private Certificate cert;
 	
+	//This value should be empty by default
+	private String filePath = "";
+	
 	public PrivateKey getPrivateKey() {
 		return privateKey;
 	}
@@ -26,5 +29,13 @@ public class KeyStorage {
 	public KeyStorage(PrivateKey privateKey, Certificate cert) {
 		this.privateKey = privateKey;
 		this.cert = cert;
+	}
+
+	public String getFilePath() {
+		return filePath;
+	}
+
+	public void setFilePath(String filePath) {
+		this.filePath = filePath;
 	}
 }

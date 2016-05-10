@@ -1,0 +1,24 @@
+package sm130075.vl130298.crypto;
+
+import java.security.*;
+import javax.crypto.KeyGenerator;
+
+
+public class KeyGen {
+	//We dont want anyone to create object of this class
+	private KeyGen(){}
+
+	public static KeyPair generatePair(Algorithm alg, int size) throws NoSuchAlgorithmException{
+			KeyPairGenerator keyGen = null;
+			keyGen = KeyPairGenerator.getInstance(alg.toString());
+			keyGen.initialize(size);
+			return keyGen.generateKeyPair();
+	}	
+	
+	public static Key generateKey(Algorithm alg, int size) throws NoSuchAlgorithmException{
+			KeyGenerator keyGen = KeyGenerator.getInstance(alg.toString());
+			keyGen.init(size);
+			return keyGen.generateKey();
+	}
+	
+}

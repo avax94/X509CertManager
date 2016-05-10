@@ -36,6 +36,7 @@ import javax.xml.bind.DatatypeConverter;
 import sm130075.vl130298.exception.CertificateAlreadySignedException;
 import sm130075.vl130298.sun.PKCS9Attribute;
 
+//Class for Certificate signing request
 public class CSR {
 	public static final String CERTIFICATE_VERSION_OID = "1.2.840.113549.1.9.9.1";
 	public static final String VALIDITY_OID = "1.2.840.113549.1.9.9.2";
@@ -79,7 +80,7 @@ public class CSR {
 			
 			PKCS10Attributes pkcs10atts = new PKCS10Attributes(att);
 			csr = new PKCS10(publicKey, pkcs10atts);
-			Object o = csr.getAttributes().getAttribute(PKCS9Attribute.CERT_VERSION_OID.toString());
+			
 			Signature sig = Signature.getInstance(Algorithm.RSAWITHSHA1.toString());
 			sig.initSign(privateKey);
 			csr.encodeAndSign(x500Name, sig);
@@ -159,49 +160,5 @@ public class CSR {
 			e.printStackTrace();
 		}
 		return null;
-	}
-
-	public static boolean compare(byte[] first, byte[] second) {
-		if (first.length != second.length)
-			return false;
-
-		for (int i = 0; i < first.length; i++)
-			if (first[i] != second[i])
-				return false;
-
-		return true;
-	}
-
-	public static void main(String[] argv) {
-		KeyPair kPair = KeyGen.generatePair(Algorithm.RSA, 1024);
-		UnsignedCert uc = null;
-		try {
-			uc = new UnsignedCert(BigInteger.ONE, new Date(System.currentTimeMillis()),
-					new Date(2 * System.currentTimeMillis()), new X500Name("cn=test,o=gina"), kPair.getPublic(),
-					null, null, null);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		KeyStorage ks = new KeyStorage(kPair.getPrivate(), uc);
-		CSR csr = new CSR(ks);
-		CSR csr2 = new CSR(csr.getEncoded());
-
-		try {
-			if (CSR.compare(uc.x509certInfo.getEncodedInfo(), csr2.getCertInfo().getEncodedInfo())) {
-				System.out.println("GUGUTKO");
-			} else {
-				System.out.println("MUNEM");
-			}
-		} catch (java.security.cert.CertificateEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		X509CertInfo x509certInfo2 = csr2.getCertInfo();
-		X509CertInfo x509certInfo = csr.getCertInfo();
-		System.out.println(csr.print());
-
 	}
 }

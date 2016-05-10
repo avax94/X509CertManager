@@ -57,19 +57,6 @@ public class KeyStoreManager {
 
 	}
 
-	public Certificate getCertificate(String alias, String password)
-			throws NoSuchAlgorithmException, CertificateException, IOException, KeyStoreException {
-
-		KeyStore keyStore = KeyStore.getInstance("pkcs12");
-		FileInputStream fStream = new FileInputStream(path);
-		keyStore.load(fStream, this.password.toCharArray());
-		Certificate cert = keyStore.getCertificateChain(alias)[0];
-		fStream.close();
-
-		return cert;
-
-	}
-
 	public KeyStorage getKeyStorage(String alias, String password) throws NoSuchAlgorithmException,
 			CertificateException, IOException, KeyStoreException, UnrecoverableEntryException {
 		// Instantiate storage
@@ -101,27 +88,5 @@ public class KeyStoreManager {
 		keyStore.store(writeStream, this.password.toCharArray());
 		writeStream.close();
 		aes.encryptFile(path);
-	}
-
-	public static void main(String[] argv) {
-		try {
-			KeyPair kPair = KeyGen.generatePair(Algorithm.RSA, 1024);
-			UnsignedCert uc = new UnsignedCert(BigInteger.ONE, new Date(System.currentTimeMillis()),
-					new Date(2 * System.currentTimeMillis()), new X500Name("cn=test,o=gina"), kPair.getPublic(), new BasicConstraintsExtension(true, 1),
-					null, null);
-
-			KeyStorage ks = new KeyStorage(kPair.getPrivate(), uc);
-
-			KeyStoreManager ksmngr = new KeyStoreManager("Nsdath12117.p12", "");
-			ksmngr.storeKey("avaxebre", ks, "avax");
-			KeyStorage kstorage = ksmngr.getKeyStorage("avaxebre", "avax");
-
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 }

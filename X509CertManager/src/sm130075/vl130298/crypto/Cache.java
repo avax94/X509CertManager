@@ -49,6 +49,7 @@ public class Cache {
 
 		KeyStoreManager keyStore = new KeyStoreManager(path, filePassword);
 		KeyStorage keyPair = keyStore.getKeyStorage(alias, password);
+		keyPair.setFilePath(path);
 		keys.put(alias, keyPair);
 	}
 
@@ -145,6 +146,18 @@ public class Cache {
 
 	public static void saveKeyPair(String alias, KeyStorage keyStorage) {
 		keys.put(alias, keyStorage);
+	}
+	
+	public static void deleteCSR(String alias){
+		csr.remove(alias);
+	}
+	
+	public static void deleteCertificate(String alias) {
+		certs.remove(alias);
+	}
+	
+	public static void deleteKeyPair(String alias) {
+		keys.remove(alias);
 	}
 
 	public static KeyStorage getKeyStorage(String alias) throws NoSuchAliasException {

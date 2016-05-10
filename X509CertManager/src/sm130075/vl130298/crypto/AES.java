@@ -31,17 +31,6 @@ public class AES {
 	private final String ivString = "AAAAAAAAAAAAAAAA";
 	private Cipher cipher;
 
-	// TODO this is hardcoded should be passed by construcotr
-	private final String _path = "keystore.p12";
-	private final String alias = "_AES_2016_X509_";
-	private final String password = "paSSword for A.Es 2016  ";
-	private final String storePw = "storePw";
-
-	public AES(Key key) throws NoSuchAlgorithmException, NoSuchPaddingException {
-		this.key = key;
-		cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
-	}
-
 	public AES() {
 		// See if we already have generated key
 		Path file = Paths.get("storage.config");
@@ -61,20 +50,6 @@ public class AES {
 
 	}
 
-	public String encrypt(String text) {
-		try {
-			IvParameterSpec iv = new IvParameterSpec(ivString.getBytes("UTF-8"));
-			cipher.init(Cipher.ENCRYPT_MODE, key, iv);
-			byte[] encrypted = cipher.doFinal(text.getBytes());
-
-			return DatatypeConverter.printBase64Binary(encrypted);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-
-		return null;
-	}
-
 	public byte[] encrypt(byte[] toEncrypt) {
 		try {
 			IvParameterSpec iv = new IvParameterSpec(ivString.getBytes("UTF-8"));
@@ -92,9 +67,7 @@ public class AES {
 	public byte[] decrypt(byte[] toDecrypt) {
 		try {
 			IvParameterSpec iv = new IvParameterSpec(ivString.getBytes("UTF-8"));
-			cipher = Cipher.getInstance("AES/CBC/PKCS5PADDING");
 			cipher.init(Cipher.DECRYPT_MODE, key, iv);
-			//cipher.update(toDecrypt);
 			byte[] original = cipher.doFinal(toDecrypt);
 
 			return original;
@@ -104,7 +77,6 @@ public class AES {
 
 		return null;
 	}
-	// TODO decrpytSTring
 
 	public void encryptFile(String path) {
 		try {
