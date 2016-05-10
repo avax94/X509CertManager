@@ -1,0 +1,108 @@
+package sm130075.vl130298.util;
+
+import sm130075.vl130298.crypto.Algorithm;
+import sm130075.vl130298.crypto.KeyGen;
+import sm130075.vl130298.exception.NoSuchAliasException;
+import sm130075.vl130298.exception.UnknownCertificateException;
+import sun.security.x509.BasicConstraintsExtension;
+import sun.security.x509.IssuerAlternativeNameExtension;
+import sun.security.x509.KeyUsageExtension;
+import sun.security.x509.X500Name;
+import sun.security.x509.X509CertImpl;
+
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateException;
+import java.util.Date;
+
+import sm1300075.vl130298.types.CSR;
+import sm1300075.vl130298.types.KeyStorage;
+import sm1300075.vl130298.types.UnsignedCert;
+
+import java.security.cert.X509Certificate;
+
+public class Generator {
+	// This method also saves CSR to cache and to file
+	public static CSR generateSigningRequest(String alias) throws NoSuchAliasException {
+		KeyStorage keyStorage = Cache.getKeyStorage(alias);
+		CSR csr = new CSR(keyStorage);
+		Cache.saveCSR(alias, csr);
+		Cache.exportCSR(alias, ".\\CSRs\\" + alias + ".p10");
+
+		return csr;
+	}
+
+	// This method also saves CSR to cache
+	public static KeyStorage generateKeyPair(int keySize, BigInteger bigNum, Date date, Date date1,
+			X500Name _subject, BasicConstraintsExtension bse, IssuerAlternativeNameExtension issAltN,
+			KeyUsageExtension keyUsage) throws NoSuchAlgorithmException {
+		KeyPair keypair = KeyGen.generatePair(Algorithm.RSA, keySize);
+		UnsignedCert uc = new UnsignedCert(bigNum, date, date1, _subject, keypair.getPublic(), bse, issAltN, keyUsage);
+		
+		return new KeyStorage(keypair.getPrivate(), uc);
+	}
+
+	public static Certificate issueCertificate(String csrAlias, String keyStorageAlias)
+			throws NoSuchAliasException, InvalidKeyException, CertificateException, NoSuchAlgorithmException,
+			NoSuchProviderException, SignatureException, IOException, UnknownCertificateException {
+		KeyStorage keyStorage = Cache.getKeyStorage(keyStorageAlias);
+		PrivateKey signingKey = keyStorage.getPrivateKey();
+		
+		if (!(keyStorage.getCert() instanceof X509Certificate))
+			throw new UnknownCertificateException();
+
+		X509Certificate issuerCert = (X509Certificate) keyStorage.getCert();
+		
+		//Issuer name is name of subject related to public key
+		X500Name issuer = new X500Name(issuerCert.getSubjectX500Principal().getName());
+		
+		// Get signing request
+		CSR signingRequest = Cache.getCSR(csrAlias);
+
+		// Create certificate for signing and sign it
+		X509CertImpl x509Cert = new X509CertImpl(signingRequest.getCertInfo(issuer));
+		x509Cert.sign(signingKey, Algorithm.RSAWITHSHA1.toString());
+
+		Cache.deleteCSR(csrAlias);
+
+		return x509Cert;
+	}
+	
+	public static void main(String[] argv){
+		KeyStorage keyStorage;
+		try {
+			keyStorage = Generator.generateKeyPair(1024, BigInteger.ONE, new Date(System.currentTimeMillis()), new Date(System.currentTimeMillis()), new X500Name("cn=Avax, o=Milan"), null, null, null);
+			//Cache.importCSR(".\\CSRs\\avax.p10", "avax");
+			//Cache.importCertificate("avax.cer", "avax");
+			Cache.saveKeyPair("avax1", keyStorage);
+			Cache.saveKeyPair("avax2", keyStorage);
+			Cache.exportKeyPair("av.p12", "avax1", "avax", "");;
+			Cache.exportKeyPair("av.p12", "avax2", "avax", "");
+			Cache.exportKeyPair("av1.p12", "avax1", "avax", "");
+			Cache.deleteKeyPair("avax1");
+			Cache.deleteKeyPair("avax2");
+			Cache.importKeyPair("avvaaxxxx", "avax1", "avax", "");
+			Cache.importKeyPair("avvaaxxx1", "avax1", "avax", "");
+			Cache.loadAllCSR();
+			Cache.importKeyPair("avax2.p12", "avax2", "avax2", "");
+			Cache.saveCertificate("avax2", Generator.issueCertificate("avax", "avax2"));
+			Cache.exportCertificate("avax2", "avax.cer");
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+	
+	}
+}

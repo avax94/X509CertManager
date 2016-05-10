@@ -116,7 +116,8 @@ public class PKCS10 {
      * @exception NoSuchAlgorithmException when the signature
      *  algorithm is not supported in this environment
      */
-    public PKCS10(byte[] data)
+    @SuppressWarnings("unused")
+	public PKCS10(byte[] data)
     throws IOException, SignatureException, NoSuchAlgorithmException {
         DerInputStream  in;
         DerValue[]      seq;
@@ -187,7 +188,8 @@ public class PKCS10 {
      * @exception CertificateException on certificate handling errors.
      * @exception SignatureException on signature handling errors.
      */
-    public void encodeAndSign(X500Name subject, Signature signature)
+    @SuppressWarnings("resource")
+	public void encodeAndSign(X500Name subject, Signature signature)
     throws CertificateException, IOException, SignatureException {
         DerOutputStream out, scratch;
         byte[]          certificateRequestInfo;

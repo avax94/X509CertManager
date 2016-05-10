@@ -1,30 +1,14 @@
 package sm130075.vl130298.crypto;
 
 import javax.crypto.Cipher;
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
-import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
 import java.security.Key;
-import java.security.NoSuchAlgorithmException;
 
 public class AES {
 	private Key key;
@@ -113,29 +97,4 @@ public class AES {
 	public ByteArrayInputStream decryptFile(String path) {
 		return decryptFile(path, false);
 	}
-
-/*	public static void main(String[] argv) {
-		Path file = Paths.get("temp.config");
-		byte[] toWRite = {12, 12, 13, 13, 14, 14, 15, 15};
-		try {
-			Files.write(file, toWRite);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		AES aes = new AES();
-		aes.encryptFile("temp.config");
-		int b;
-		int i = 0;
-		ByteArrayInputStream os = aes.decryptFile("temp.config");
-		byte[] res = new byte[os.available()];
-		
-		while ((b = os.read()) != -1) {
-			res[i++] = (byte) b;
-			System.out.print(b);
-		}
-		System.out.println();
-		System.out.print(DatatypeConverter.printBase64Binary(res));
-		
-	}*/
 }

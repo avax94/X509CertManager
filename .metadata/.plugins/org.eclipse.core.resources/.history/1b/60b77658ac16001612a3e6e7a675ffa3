@@ -1,0 +1,13 @@
+package sm130075.vl130298.util;
+
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+
+public class VisitorOfFiles extends SimpleFileVisitor<Path> {
+	@Override
+	  public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+	    indent();
+	    System.out.println("Visiting file:" + file.getFileName());
+	    return FileVisitResult.CONTINUE;
+	  }
+}

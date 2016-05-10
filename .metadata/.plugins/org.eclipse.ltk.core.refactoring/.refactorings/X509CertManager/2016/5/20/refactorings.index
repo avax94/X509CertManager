@@ -10,3 +10,10 @@
 1462826984530	Delete element
 1462842811898	Encapsulate field 'filePath'
 1462843958822	Delete elements
+1462883695205	Move compilation unit
+1462883722744	Move compilation unit
+1462883745612	Move compilation unit
+1462883753896	Move compilation unit
+1462883760232	Move compilation unit
+1462884062363	Rename type 'VisitorOfFiles'
+1462885051228	Rename method 'loadCSR'

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <launchConfiguration type="org.eclipse.jdt.launching.localJavaApplication">
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
-<listEntry value="/X509CertManager/src/sm130075/vl130298/crypto/CSR.java"/>
+<listEntry value="/X509CertManager/src/sm1300075/vl130298/types/CSR.java"/>
 </listAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_TYPES">
 <listEntry value="1"/>
 </listAttribute>
-<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="sm130075.vl130298.crypto.CSR"/>
+<stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="sm1300075.vl130298.types.CSR"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="X509CertManager"/>
 </launchConfiguration>

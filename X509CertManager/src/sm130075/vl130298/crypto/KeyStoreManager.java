@@ -1,36 +1,25 @@
 package sm130075.vl130298.crypto;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.Key;
-import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.KeyStore.PasswordProtection;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.UnrecoverableEntryException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
-// PATH PASSWORD AND KEYSTORE --/> 
-// SIZE OD KEY VERZIJA PERIOD VAZENJA(DATE TIP) SERIJSKI BROJ , INFO O KORISNIKU , KORISCENJE KLJUCA
-// 
 
-import javax.crypto.CipherInputStream;
-import javax.crypto.CipherOutputStream;
+import sm1300075.vl130298.types.KeyStorage;
+import sm1300075.vl130298.types.UnsignedCert;
+import sm130075.vl130298.exception.NoSuchAliasException;
 
-import sun.security.x509.BasicConstraintsExtension;
-import sun.security.x509.X500Name;
-
-import java.util.Date;
+import java.util.Enumeration;
 
 public class KeyStoreManager {
 
@@ -53,21 +42,32 @@ public class KeyStoreManager {
 			// this is creation
 			keyStore.load(null, null);
 			keyStore.store(new FileOutputStream(path), password.toCharArray());
+			aes.encryptFile(path);
 		}
 
 	}
 
 	public KeyStorage getKeyStorage(String alias, String password) throws NoSuchAlgorithmException,
-			CertificateException, IOException, KeyStoreException, UnrecoverableEntryException {
+			CertificateException, IOException, KeyStoreException, UnrecoverableEntryException, NoSuchAliasException {
 		// Instantiate storage
 		KeyStore keyStore = KeyStore.getInstance("pkcs12");
-		keyStore.load(aes.decryptFile(path, true), this.password.toCharArray());
+		ByteArrayInputStream store = aes.decryptFile(path);
+	
+		keyStore.load(store, this.password.toCharArray());
 
 		// Set protection parameters
 		PasswordProtection pwProt = new KeyStore.PasswordProtection(password.toCharArray());
-
+		
+		
+		Enumeration<String> s = keyStore.aliases();
+		while(s.hasMoreElements()){
+			System.out.println(s.nextElement());
+		}
 		KeyStore.PrivateKeyEntry key = (KeyStore.PrivateKeyEntry) keyStore.getEntry(alias, pwProt);
-	
+
+		if (key == null)
+			throw new NoSuchAliasException("Alias not found in key storage!");
+
 		return new KeyStorage(key.getPrivateKey(), new UnsignedCert(key.getCertificate().getEncoded()));
 	}
 
@@ -75,8 +75,8 @@ public class KeyStoreManager {
 			throws NoSuchAlgorithmException, CertificateException, IOException, KeyStoreException {
 		PrivateKey key = keyStorage.getPrivateKey();
 		Certificate cert = keyStorage.getCert();
-
-		keyStore.load(null, null);
+		ByteArrayInputStream store = aes.decryptFile(path);
+		keyStore.load(store, this.password.toCharArray());
 
 		// Create certificate chain - only one UNSIGNED certificate
 		Certificate[] array = new Certificate[1];
@@ -84,7 +84,6 @@ public class KeyStoreManager {
 
 		keyStore.setKeyEntry(alias, key, password.toCharArray(), array);
 		FileOutputStream writeStream = new FileOutputStream(path);
-		aes.decryptFile(path, true);
 		keyStore.store(writeStream, this.password.toCharArray());
 		writeStream.close();
 		aes.encryptFile(path);

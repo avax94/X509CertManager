@@ -27,7 +27,6 @@ package sm130075.vl130298.sun;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import java.security.cert.CertificateException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -109,7 +108,8 @@ public class PKCS10Attributes implements DerEncoder {
         PKCS10Attribute[] attribs =
                 allAttrs.toArray(new PKCS10Attribute[map.size()]);
 
-        DerOutputStream attrOut = new DerOutputStream();
+        @SuppressWarnings("resource")
+		DerOutputStream attrOut = new DerOutputStream();
         attrOut.putOrderedSetOf(DerValue.createTag(DerValue.TAG_CONTEXT,
                                                    true, (byte)0),
                                 attribs);

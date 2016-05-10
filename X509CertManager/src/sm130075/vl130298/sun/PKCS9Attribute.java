@@ -37,7 +37,6 @@ import sun.security.x509.CertificateAlgorithmId;
 import sun.security.x509.CertificateExtensions;
 import sun.security.x509.CertificateSerialNumber;
 import sun.security.x509.CertificateValidity;
-import sun.security.x509.CertificateVersion;
 import sun.security.pkcs.SignerInfo;
 import sun.security.pkcs.SigningCertificateInfo;
 import sun.security.util.Debug;
@@ -210,6 +209,7 @@ import sun.misc.HexDumpEncoder;
  *
  * @author Douglas Hoover, edited by Milan Stefanovic
  */
+@SuppressWarnings("rawtypes")
 public class PKCS9Attribute implements DerEncoder {
 
 	/* Are we debugging ? */
@@ -657,6 +657,7 @@ public class PKCS9Attribute implements DerEncoder {
 	 * without checking whether they should be encoded as <code>T61String</code>
 	 * s.
 	 */
+	@SuppressWarnings("resource")
 	public void derEncode(OutputStream out) throws IOException {
 		DerOutputStream temp = new DerOutputStream();
 		temp.putOID(oid);
