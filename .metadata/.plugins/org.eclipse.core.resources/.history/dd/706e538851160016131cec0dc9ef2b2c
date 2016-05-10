@@ -45,7 +45,7 @@ public class Generator {
 
 	public static Certificate issueCertificate(String csrAlias, String keyStorageAlias)
 			throws NoSuchAliasException, InvalidKeyException, CertificateException, NoSuchAlgorithmException,
-			NoSuchProviderException, SignatureException, IOException, UnknownCertificateException {
+			NoSuchProviderException, SignatureException, IOException {
 		// Get key for signing
 		KeyStorage keyStorage = Cache.getKeyStorage(keyStorageAlias);
 		PrivateKey signingKey = keyStorage.getPrivateKey();
@@ -54,8 +54,6 @@ public class Generator {
 			throw new UnknownCertificateException();
 
 		X509Certificate issuerCert = (X509Certificate) keyStorage.getCert();
-		
-		//Issuer name is name of subject related to public key
 		X500Name issuer = new X500Name(issuerCert.getSubjectX500Principal().getName());
 		// Get signing request
 		CSR signingRequest = Cache.getCSR(csrAlias);

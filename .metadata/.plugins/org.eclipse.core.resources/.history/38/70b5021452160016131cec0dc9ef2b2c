@@ -138,7 +138,7 @@ public class UnsignedCert extends X509Certificate {
 		interval = (CertificateValidity) x509certInfo.get(X509CertInfo.VALIDITY);
 		subject = (X500Name) x509certInfo.get(X509CertInfo.SUBJECT);
 		pubKey = new CertificateX509Key(x509cert.getPublicKey());
-		//TODO check if works
+		//TODO
 		bse = (BasicConstraintsExtension) x509cert.getExtension(PKIXExtensions.BasicConstraints_Id);
 		issAltNames = (IssuerAlternativeNameExtension) x509cert.getExtension(PKIXExtensions.IssuerAlternativeName_Id);
 		keyUsageEx = (KeyUsageExtension) x509cert.getExtension(PKIXExtensions.KeyUsage_Id);

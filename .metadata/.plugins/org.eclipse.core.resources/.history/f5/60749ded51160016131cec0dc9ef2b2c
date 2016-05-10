@@ -138,11 +138,38 @@ public class UnsignedCert extends X509Certificate {
 		interval = (CertificateValidity) x509certInfo.get(X509CertInfo.VALIDITY);
 		subject = (X500Name) x509certInfo.get(X509CertInfo.SUBJECT);
 		pubKey = new CertificateX509Key(x509cert.getPublicKey());
-		//TODO check if works
+		//TODO
 		bse = (BasicConstraintsExtension) x509cert.getExtension(PKIXExtensions.BasicConstraints_Id);
 		issAltNames = (IssuerAlternativeNameExtension) x509cert.getExtension(PKIXExtensions.IssuerAlternativeName_Id);
 		keyUsageEx = (KeyUsageExtension) x509cert.getExtension(PKIXExtensions.KeyUsage_Id);
 	}
+
+	
+	
+	/*
+	 * public static void main(String[] argv) {
+	 * 
+	 * try { KeyPair keyPair = KeyGen.generatePair(Algorithm.RSA, 1024);
+	 * UnsignedCert uc = new UnsignedCert(BigInteger.ONE, new
+	 * X500Name("cn=test,o=gina"), new Date(System.currentTimeMillis()), new
+	 * Date(2 * System.currentTimeMillis()), new X500Name("cn=test,o=gina"),
+	 * keyPair.getPublic());
+	 * 
+	 * KeyStoreManager keyStore = new KeyStoreManager("milan.pk12", "zmajce");
+	 * //keyStore.storeKey(keyPair.getPrivate(), "avax7", uc, "zmaj");
+	 * //KeyStorage keyPair2 = keyStore.getKeyStorage("avax7", "zmaj"); if
+	 * (compare(keyPair.getPrivate().getEncoded(),
+	 * keyPair2.getPrivateKey().getEncoded()) &&
+	 * compare(keyPair.getPublic().getEncoded(),
+	 * keyPair2.getUnsignedCert().getPublicKey().getEncoded())) {
+	 * System.out.println("whaaaat"); } else { System.out.println("nah man"); }
+	 * // X509CertImpl x509 = new X509CertImpl(new //
+	 * X509CertInfo(keyStore.getCertificate("avax7", "").getEncoded()));
+	 * 
+	 * } catch (Exception e) { e.printStackTrace(); }
+	 * 
+	 * System.out.println("Nesto za kraj!"); }
+	 */
 
 	public X509CertInfo getX509certInfo() {
 		return x509certInfo;

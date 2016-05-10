@@ -54,8 +54,6 @@ public class Generator {
 			throw new UnknownCertificateException();
 
 		X509Certificate issuerCert = (X509Certificate) keyStorage.getCert();
-		
-		//Issuer name is name of subject related to public key
 		X500Name issuer = new X500Name(issuerCert.getSubjectX500Principal().getName());
 		// Get signing request
 		CSR signingRequest = Cache.getCSR(csrAlias);

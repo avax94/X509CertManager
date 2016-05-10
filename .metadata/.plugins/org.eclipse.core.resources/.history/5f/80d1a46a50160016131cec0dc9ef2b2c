@@ -42,7 +42,7 @@ public class CSR {
 	public static final String VALIDITY_OID = "1.2.840.113549.1.9.9.2";
 	private PKCS10 csr;
 	byte[] encoded;
-	
+
 	public CSR(KeyStorage keyStorage) {
 		try {
 			Certificate cert = keyStorage.getCert();
@@ -51,7 +51,7 @@ public class CSR {
 				throw new CertificateAlreadySignedException();
 
 			UnsignedCert unsignedCert = (UnsignedCert) cert;
-			
+
 			PrivateKey privateKey = keyStorage.getPrivateKey();
 			PublicKey publicKey = unsignedCert.getPublicKey();
 			X500Name x500Name = new X500Name(unsignedCert.getSubjectX500Principal().getName());
@@ -90,7 +90,7 @@ public class CSR {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public CSR(FileInputStream fStream) {
 		try {
 			int leftOvers = fStream.available();
@@ -119,7 +119,7 @@ public class CSR {
 		return DatatypeConverter.printBase64Binary(encoded);
 	}
 
-	public X509CertInfo getCertInfo(X500Name issuer) {
+	public X509CertInfo getCertInfo() {
 		try {
 			X509CertInfo result = new X509CertInfo();
 			PKCS10Attribute att;
@@ -147,7 +147,7 @@ public class CSR {
 			result.set(X509CertInfo.KEY, new CertificateX509Key(csr.getSubjectPublicKeyInfo()));
 			
 			//set issuer
-			result.set(X509CertInfo.ISSUER, issuer);
+			result.set(X509CertInfo.ISSUER, new X500Name("cn= , o= "));
 
 			// Set extensions
 			att = (PKCS10Attribute) csr.getAttributes().getAttribute(PKCS9Attribute.EXTENSION_REQUEST_OID.toString());
