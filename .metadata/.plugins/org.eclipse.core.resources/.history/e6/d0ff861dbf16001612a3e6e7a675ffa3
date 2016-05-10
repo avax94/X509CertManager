@@ -37,6 +37,7 @@ public class Generator {
 		return csr;
 	}
 
+	// This method also saves CSR to cache
 	public static KeyStorage generateKeyPair(int keySize, BigInteger bigNum, Date date, Date date1,
 			X500Name _subject, BasicConstraintsExtension bse, IssuerAlternativeNameExtension issAltN,
 			KeyUsageExtension keyUsage) throws NoSuchAlgorithmException {
@@ -67,10 +68,10 @@ public class Generator {
 		X509CertImpl x509Cert = new X509CertImpl(signingRequest.getCertInfo(issuer));
 		x509Cert.sign(signingKey, Algorithm.RSAWITHSHA1.toString());
 		
-		Cache.deleteCSR(csrAlias);
-		
 		//Update KeyStorage Certificate
-		Cache.getKeyStorage(csrAlias).setCert(x509Cert);
+		
+		
+		Cache.deleteCSR(csrAlias);
 
 		return x509Cert;
 	}

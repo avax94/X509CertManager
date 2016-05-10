@@ -81,8 +81,7 @@ public class KeyStoreManager {
 		// Create certificate chain - only one UNSIGNED certificate
 		Certificate[] array = new Certificate[1];
 		array[0] = cert;
-		
-		//TODO try to encrypt it with CipherOutputStream
+
 		keyStore.setKeyEntry(alias, key, password.toCharArray(), array);
 		FileOutputStream writeStream = new FileOutputStream(path);
 		keyStore.store(writeStream, this.password.toCharArray());
